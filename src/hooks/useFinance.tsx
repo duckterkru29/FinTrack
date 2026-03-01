@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import lzString from 'lz-string';
 import { monthlyData as initialMonthlyData } from '@/data/financeData';
 import type { MonthlyData } from '@/types/finance';
 
@@ -17,6 +18,7 @@ interface FinanceContextType {
     transactions: import('@/types/finance').Transaction[];
     addTransaction: (transaction: Omit<import('@/types/finance').Transaction, 'id'>) => void;
     clearTransactions: (monthIndex: number) => void;
+    exportDataAsLink: () => string;
 }
 
 const FinanceContext = createContext<FinanceContextType | undefined>(undefined);
@@ -112,6 +114,39 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         }
         return [];
     });
+
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const shareParam = params.get('share');
+        if (shareParam) {
+            try {
+                const decompressed = lzString.decompressFromEncodedURIComponent(shareParam);
+                if (decompressed) {
+                    const parsedShare = JSON.parse(decompressed);
+                    if (parsedShare && parsedShare.data) {
+                        setTimeout(() => {
+                            if (window.confirm("📦 Ditemukan data FinTrack yang dibagikan via link!\n\nApakah Anda ingin mengimpor data ini? \nPERINGATAN: Semua data lokal Anda saat ini akan tertimpa secara permanen.")) {
+                                setData(sortMonths(parsedShare.data.map(recalculateTotals)));
+                                if (parsedShare.transactions) {
+                                    setTransactions(parsedShare.transactions);
+                                }
+                            }
+                        }, 500); // delay slighty to ensure UI loads before prompt blocking
+                    } else {
+                        alert("Format link data tidak valid.");
+                    }
+                } else {
+                    alert("Link data rusak atau tidak valid.");
+                }
+            } catch (e) {
+                console.error("Failed to parse shared data", e);
+                alert("Gagal mengimpor data dari link. Mungkin link tidak utuh.");
+            } finally {
+                // remove share from URL to prevent looping
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+        }
+    }, []);
 
     useEffect(() => {
         localStorage.setItem('fintrack_data_v2', JSON.stringify(data));
@@ -357,11 +392,17 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         }));
     };
 
+    const exportDataAsLink = () => {
+        const payload = { data, transactions };
+        const compressed = lzString.compressToEncodedURIComponent(JSON.stringify(payload));
+        return `${window.location.origin}${window.location.pathname}?share=${compressed}`;
+    };
+
     return (
         <FinanceContext.Provider value={{
             data, selectedMonth, setSelectedMonth, viewMode, setViewMode, updateIncome, addSubcategory,
             updateSubcategory, deleteSubcategory, addMonth, deleteMonthData,
-            transactions, addTransaction, clearTransactions
+            transactions, addTransaction, clearTransactions, exportDataAsLink
         }}>
             {children}
         </FinanceContext.Provider>

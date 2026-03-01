@@ -6,9 +6,12 @@ import {
   X,
   Home,
   List,
-  PlusCircle
+  PlusCircle,
+  Share2,
+  Check
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useFinance } from '@/hooks/useFinance';
 
 interface NavigationProps {
   activeSection: string;
@@ -24,6 +27,19 @@ const navItems = [
 export default function Navigation({ activeSection, onNavigate }: NavigationProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
+  const { exportDataAsLink } = useFinance();
+
+  const handleShare = () => {
+    const link = exportDataAsLink();
+    navigator.clipboard.writeText(link).then(() => {
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
+    }).catch(err => {
+      console.error("Failed to copy link", err);
+      prompt("Copy link berikut:", link); // fallback
+    });
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -63,52 +79,75 @@ export default function Navigation({ activeSection, onNavigate }: NavigationProp
               </span>
             </motion.div>
 
-            {/* Desktop Nav Items */}
-            <nav className="hidden lg:flex items-center gap-1">
-              {navItems.map((item) => {
-                const Icon = item.icon;
-                const isActive = activeSection === item.id;
+            <div className="flex items-center gap-2">
+              {/* Desktop Nav Items */}
+              <nav className="hidden lg:flex items-center gap-1">
+                {navItems.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = activeSection === item.id;
 
-                return (
-                  <motion.button
-                    key={item.id}
-                    onClick={() => onNavigate(item.id)}
-                    className={`relative px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${isActive
-                      ? 'text-foreground'
-                      : 'text-muted-foreground hover:text-foreground'
-                      }`}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    {isActive && (
-                      <motion.div
-                        layoutId="activeNav"
-                        className="absolute inset-0 bg-secondary rounded-lg"
-                        transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
-                      />
-                    )}
-                    <span className="relative z-10 flex items-center gap-2">
-                      <Icon className="w-4 h-4" />
-                      {item.label}
-                    </span>
-                  </motion.button>
-                );
-              })}
-            </nav>
+                  return (
+                    <motion.button
+                      key={item.id}
+                      onClick={() => onNavigate(item.id)}
+                      className={`relative px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${isActive
+                        ? 'text-foreground'
+                        : 'text-muted-foreground hover:text-foreground'
+                        }`}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      {isActive && (
+                        <motion.div
+                          layoutId="activeNav"
+                          className="absolute inset-0 bg-secondary rounded-lg"
+                          transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
+                        />
+                      )}
+                      <span className="relative z-10 flex items-center gap-2">
+                        <Icon className="w-4 h-4" />
+                        {item.label}
+                      </span>
+                    </motion.button>
+                  );
+                })}
+              </nav>
 
-            {/* Mobile Menu Button */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="lg:hidden"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            >
-              {isMobileMenuOpen ? (
-                <X className="w-6 h-6" />
-              ) : (
-                <Menu className="w-6 h-6" />
-              )}
-            </Button>
+              {/* Share Button (Desktop & Mobile) */}
+              <Button
+                variant={isCopied ? "default" : "outline"}
+                size="sm"
+                className={`hidden sm:flex items-center gap-2 ml-2 transition-all duration-300 ${isCopied ? "bg-green-500 hover:bg-green-600 text-white border-green-500" : ""}`}
+                onClick={handleShare}
+              >
+                {isCopied ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
+                <span className="hidden md:inline">{isCopied ? "Tersalin!" : "Share Link"}</span>
+              </Button>
+
+              {/* Mobile Share Button if screen is extra small */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="sm:hidden"
+                onClick={handleShare}
+              >
+                {isCopied ? <Check className="w-5 h-5 text-green-500" /> : <Share2 className="w-5 h-5" />}
+              </Button>
+
+              {/* Mobile Menu Button */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="lg:hidden"
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              >
+                {isMobileMenuOpen ? (
+                  <X className="w-6 h-6" />
+                ) : (
+                  <Menu className="w-6 h-6" />
+                )}
+              </Button>
+            </div>
           </div>
         </div>
       </motion.header>
