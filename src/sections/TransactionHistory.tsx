@@ -166,35 +166,35 @@ export default function TransactionHistory() {
                         onClick={() => toggleExpand(transaction.id)}
                       >
                         <div className="p-4">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-4">
-                              <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl ${categoryColors[transaction.category] || 'bg-secondary'}`}>
+                          <div className="flex items-center justify-between gap-2 sm:gap-4">
+                            <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
+                              <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex-shrink-0 flex items-center justify-center text-xl sm:text-2xl ${categoryColors[transaction.category] || 'bg-secondary'}`}>
                                 {categoryIcons[transaction.category] || '💵'}
                               </div>
-                              <div>
-                                <p className="font-medium text-foreground">
+                              <div className="min-w-0 flex-1">
+                                <p className="font-medium text-sm sm:text-base text-white truncate">
                                   {transaction.description}
                                 </p>
-                                <div className="flex items-center gap-2 mt-1">
-                                  <Badge variant="secondary" className="text-xs">
+                                <div className="flex items-center gap-1.5 sm:gap-2 mt-1">
+                                  <Badge variant="secondary" className="text-[9px] sm:text-xs truncate max-w-[80px] sm:max-w-none">
                                     {transaction.category}
                                   </Badge>
                                   {transaction.subcategory && (
-                                    <Badge variant="outline" className="text-xs">
+                                    <Badge variant="outline" className="text-[9px] sm:text-xs truncate max-w-[80px] sm:max-w-none border-white/10">
                                       {transaction.subcategory}
                                     </Badge>
                                   )}
                                 </div>
                               </div>
                             </div>
-                            <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
                               <div className="text-right">
-                                <p className={`font-semibold ${transaction.type === 'income' ? 'text-[#60a5fa]' : 'text-[#f87171]'
+                                <p className={`font-semibold text-sm sm:text-base whitespace-nowrap ${transaction.type === 'income' ? 'text-[#60a5fa]' : 'text-[#f87171]'
                                   }`}>
                                   {transaction.type === 'income' ? '+' : '-'}
                                   {formatCurrency(transaction.amount)}
                                 </p>
-                                <p className="text-xs text-muted-foreground">
+                                <p className="text-[10px] sm:text-xs text-muted-foreground whitespace-nowrap">
                                   {new Date(transaction.date).toLocaleDateString('id-ID', {
                                     day: 'numeric',
                                     month: 'short',
@@ -203,9 +203,9 @@ export default function TransactionHistory() {
                                 </p>
                               </div>
                               {expandedId === transaction.id ? (
-                                <ChevronUp className="w-5 h-5 text-muted-foreground" />
+                                <ChevronUp className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground hidden sm:block" />
                               ) : (
-                                <ChevronDown className="w-5 h-5 text-muted-foreground" />
+                                <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground hidden sm:block" />
                               )}
                             </div>
                           </div>
