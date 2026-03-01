@@ -7,18 +7,15 @@ import {
   Filter,
   Search,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Trash2
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { transactions, formatCurrency } from '@/data/financeData';
-// Transaction type is used implicitly through the transactions data
-
-interface TransactionHistoryProps {
-  selectedMonth: number;
-}
+import { formatCurrency } from '@/data/financeData';
+import { useFinance } from '@/hooks/useFinance';
 
 const categoryColors: Record<string, string> = {
   'Pendapatan': 'bg-[#60a5fa]/20 text-[#60a5fa]',
@@ -36,22 +33,28 @@ const categoryIcons: Record<string, string> = {
   'Kebaikan': '❤️'
 };
 
-export default function TransactionHistory({ selectedMonth }: TransactionHistoryProps) {
+export default function TransactionHistory() {
+  const { data, selectedMonth, transactions, clearTransactions, viewMode } = useFinance();
+  const currentData = data[selectedMonth];
+  const isAllMonths = viewMode === -1;
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'income' | 'expense'>('all');
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  const monthNames = ['Januari', 'Februari', 'Maret'];
-  const selectedMonthName = monthNames[selectedMonth];
-
   const filteredTransactions = transactions.filter(transaction => {
-    const transactionMonth = new Date(transaction.date).getMonth();
-    const matchesMonth = transactionMonth === selectedMonth;
+    // When viewMode is "Semua" (-1), show all transactions; otherwise filter by month
+    if (!isAllMonths) {
+      const tDate = new Date(transaction.date);
+      const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+      const matchesMonth = currentData ? (tDate.getMonth() === months.indexOf(currentData.month) && tDate.getFullYear() === currentData.year) : false;
+      if (!matchesMonth) return false;
+    }
+
     const matchesSearch = transaction.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         transaction.category.toLowerCase().includes(searchTerm.toLowerCase());
+      transaction.category.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesType = filterType === 'all' || transaction.type === filterType;
 
-    return matchesMonth && matchesSearch && matchesType;
+    return matchesSearch && matchesType;
   }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   const toggleExpand = (id: string) => {
@@ -67,7 +70,7 @@ export default function TransactionHistory({ selectedMonth }: TransactionHistory
           viewport={{ once: true }}
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
         >
-          <Card className="bg-gradient-to-br from-[#2a2a2a] to-[#1a1a1a] border-border overflow-hidden">
+          <Card className="bg-card glass shadow-2xl overflow-hidden">
             <CardHeader className="pb-2">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div className="flex items-center gap-3">
@@ -79,10 +82,25 @@ export default function TransactionHistory({ selectedMonth }: TransactionHistory
                       Riwayat Transaksi
                     </CardTitle>
                     <p className="text-sm text-muted-foreground mt-1">
-                      Transaksi {selectedMonthName} 2026
+                      {isAllMonths ? `Semua transaksi (${data.length} bulan)` : `Transaksi ${currentData?.month} ${currentData?.year}`}
                     </p>
                   </div>
                 </div>
+
+                {/* Clear Button — only for specific month */}
+                {!isAllMonths && filteredTransactions.length > 0 && (
+                  <button
+                    onClick={() => {
+                      if (window.confirm(`Hapus semua ${filteredTransactions.length} transaksi bulan ${currentData?.month} ${currentData?.year}? Ini juga akan mengembalikan nilai Budget Plan ke sebelum transaksi.`)) {
+                        clearTransactions(selectedMonth);
+                      }
+                    }}
+                    className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg hover:bg-red-500/20 transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Hapus Semua
+                  </button>
+                )}
 
                 {/* Filters */}
                 <div className="flex flex-col sm:flex-row gap-3">
@@ -171,9 +189,8 @@ export default function TransactionHistory({ selectedMonth }: TransactionHistory
                             </div>
                             <div className="flex items-center gap-4">
                               <div className="text-right">
-                                <p className={`font-semibold ${
-                                  transaction.type === 'income' ? 'text-[#60a5fa]' : 'text-[#f87171]'
-                                }`}>
+                                <p className={`font-semibold ${transaction.type === 'income' ? 'text-[#60a5fa]' : 'text-[#f87171]'
+                                  }`}>
                                   {transaction.type === 'income' ? '+' : '-'}
                                   {formatCurrency(transaction.amount)}
                                 </p>

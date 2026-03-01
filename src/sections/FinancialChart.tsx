@@ -3,16 +3,20 @@ import { motion } from 'framer-motion';
 import {
   AreaChart,
   Area,
+  BarChart,
+  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Legend
+  Legend,
+  Cell
 } from 'recharts';
 import { TrendingUp, TrendingDown } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { getChartData, formatCurrency } from '@/data/financeData';
+import { formatCurrency } from '@/data/financeData';
+import { useFinance } from '@/hooks/useFinance';
 
 interface CustomTooltipProps {
   active?: boolean;
@@ -48,7 +52,9 @@ const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
 };
 
 export default function FinancialChart() {
-  const [chartData] = useState(getChartData());
+  const { data, viewMode } = useFinance();
+  const isAllMonths = viewMode === -1;
+
   const [animationComplete, setAnimationComplete] = useState(false);
 
   useEffect(() => {
@@ -56,9 +62,37 @@ export default function FinancialChart() {
     return () => clearTimeout(timer);
   }, []);
 
-  const totalPemasukan = chartData.reduce((sum, data) => sum + data.pemasukan, 0);
-  const totalPengeluaran = chartData.reduce((sum, data) => sum + data.pengeluaran, 0);
+  // --- ALL MONTHS: Area chart showing trends ---
+  const allChartData = data.map(d => ({
+    name: d.month,
+    pemasukan: d.income.total,
+    pengeluaran: d.totalReal
+  }));
+
+  const totalPemasukan = isAllMonths
+    ? allChartData.reduce((sum, d) => sum + d.pemasukan, 0)
+    : data[viewMode]?.income.total ?? 0;
+
+  const totalPengeluaran = isAllMonths
+    ? allChartData.reduce((sum, d) => sum + d.pengeluaran, 0)
+    : data[viewMode]?.totalReal ?? 0;
+
   const percentage = totalPemasukan > 0 ? ((totalPemasukan - totalPengeluaran) / totalPemasukan * 100) : 0;
+  const monthCount = isAllMonths ? data.length : 1;
+
+  // --- SINGLE MONTH: Bar chart per category ---
+  const singleMonthData = !isAllMonths && data[viewMode]
+    ? data[viewMode].expenses.map(exp => ({
+      name: exp.name,
+      ideal: exp.idealAmount,
+      real: exp.realAmount,
+      color: exp.color
+    }))
+    : [];
+
+  const displayLabel = isAllMonths
+    ? `Tren pemasukan & pengeluaran semua bulan (${data.length} bulan)`
+    : `Detail anggaran ${data[viewMode]?.month} ${data[viewMode]?.year}`;
 
   return (
     <section className="py-12 px-4 sm:px-6 lg:px-8">
@@ -69,7 +103,7 @@ export default function FinancialChart() {
           viewport={{ once: true }}
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
         >
-          <Card className="bg-gradient-to-br from-[#2a2a2a] to-[#1a1a1a] border-border overflow-hidden">
+          <Card className="bg-card glass shadow-2xl overflow-hidden">
             <CardHeader className="pb-2">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
@@ -77,7 +111,7 @@ export default function FinancialChart() {
                     Grafik Keuangan
                   </CardTitle>
                   <p className="text-sm text-muted-foreground mt-1">
-                    Tren pemasukan dan pengeluaran 3 bulan terakhir
+                    {displayLabel}
                   </p>
                 </div>
                 <div className="flex items-center gap-4">
@@ -92,7 +126,7 @@ export default function FinancialChart() {
                         {percentage >= 0 ? '+' : ''}{percentage.toFixed(1)}%
                       </span>
                     </div>
-                    <p className="text-xs text-muted-foreground">vs total</p>
+                    <p className="text-xs text-muted-foreground">{isAllMonths ? 'vs total' : 'sisa'}</p>
                   </div>
                 </div>
               </div>
@@ -100,67 +134,124 @@ export default function FinancialChart() {
             <CardContent className="pt-6">
               <div className="h-[400px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart
-                    data={chartData}
-                    margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
-                  >
-                    <defs>
-                      <linearGradient id="colorPemasukan" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#60a5fa" stopOpacity={0.3} />
-                        <stop offset="95%" stopColor="#60a5fa" stopOpacity={0} />
-                      </linearGradient>
-                      <linearGradient id="colorPengeluaran" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#f87171" stopOpacity={0.3} />
-                        <stop offset="95%" stopColor="#f87171" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                      stroke="#3a3a3a"
-                      vertical={false}
-                    />
-                    <XAxis
-                      dataKey="name"
-                      stroke="#6b7280"
-                      fontSize={12}
-                      tickLine={false}
-                      axisLine={false}
-                    />
-                    <YAxis
-                      stroke="#6b7280"
-                      fontSize={12}
-                      tickLine={false}
-                      axisLine={false}
-                      tickFormatter={(value) => `Rp ${(value / 1000000).toFixed(1)}M`}
-                    />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Legend
-                      wrapperStyle={{ paddingTop: '20px' }}
-                      iconType="circle"
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="pemasukan"
-                      name="Pemasukan"
-                      stroke="#60a5fa"
-                      strokeWidth={3}
-                      fillOpacity={1}
-                      fill="url(#colorPemasukan)"
-                      animationDuration={2000}
-                      animationBegin={0}
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="pengeluaran"
-                      name="Pengeluaran"
-                      stroke="#f87171"
-                      strokeWidth={3}
-                      fillOpacity={1}
-                      fill="url(#colorPengeluaran)"
-                      animationDuration={2000}
-                      animationBegin={500}
-                    />
-                  </AreaChart>
+                  {isAllMonths ? (
+                    /* ALL MONTHS — Area Chart (tren) */
+                    <AreaChart
+                      data={allChartData}
+                      margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                    >
+                      <defs>
+                        <linearGradient id="colorPemasukan" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#60a5fa" stopOpacity={0.3} />
+                          <stop offset="95%" stopColor="#60a5fa" stopOpacity={0} />
+                        </linearGradient>
+                        <linearGradient id="colorPengeluaran" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#f87171" stopOpacity={0.3} />
+                          <stop offset="95%" stopColor="#f87171" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid
+                        strokeDasharray="3 3"
+                        stroke="#3a3a3a"
+                        vertical={false}
+                      />
+                      <XAxis
+                        dataKey="name"
+                        stroke="#6b7280"
+                        fontSize={12}
+                        tickLine={false}
+                        axisLine={false}
+                      />
+                      <YAxis
+                        stroke="#6b7280"
+                        fontSize={12}
+                        tickLine={false}
+                        axisLine={false}
+                        tickFormatter={(value) => `Rp ${(value / 1000000).toFixed(1)}M`}
+                      />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Legend
+                        wrapperStyle={{ paddingTop: '20px' }}
+                        iconType="circle"
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="pemasukan"
+                        name="Pemasukan"
+                        stroke="#60a5fa"
+                        strokeWidth={3}
+                        fillOpacity={1}
+                        fill="url(#colorPemasukan)"
+                        animationDuration={2000}
+                        animationBegin={0}
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="pengeluaran"
+                        name="Pengeluaran"
+                        stroke="#f87171"
+                        strokeWidth={3}
+                        fillOpacity={1}
+                        fill="url(#colorPengeluaran)"
+                        animationDuration={2000}
+                        animationBegin={500}
+                      />
+                    </AreaChart>
+                  ) : (
+                    /* SINGLE MONTH — Bar Chart (per kategori) */
+                    <BarChart
+                      data={singleMonthData}
+                      margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                    >
+                      <CartesianGrid
+                        strokeDasharray="3 3"
+                        stroke="#3a3a3a"
+                        vertical={false}
+                      />
+                      <XAxis
+                        dataKey="name"
+                        stroke="#6b7280"
+                        fontSize={11}
+                        tickLine={false}
+                        axisLine={false}
+                        interval={0}
+                        angle={-15}
+                        textAnchor="end"
+                        height={60}
+                      />
+                      <YAxis
+                        stroke="#6b7280"
+                        fontSize={12}
+                        tickLine={false}
+                        axisLine={false}
+                        tickFormatter={(value) => `Rp ${(value / 1000000).toFixed(1)}M`}
+                      />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Legend
+                        wrapperStyle={{ paddingTop: '20px' }}
+                        iconType="circle"
+                      />
+                      <Bar
+                        dataKey="ideal"
+                        name="Ideal"
+                        fill="#60a5fa"
+                        radius={[4, 4, 0, 0]}
+                        animationDuration={1500}
+                        opacity={0.4}
+                      />
+                      <Bar
+                        dataKey="real"
+                        name="Realisasi"
+                        radius={[4, 4, 0, 0]}
+                        animationDuration={1500}
+                        animationBegin={300}
+                      >
+                        {singleMonthData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  )}
                 </ResponsiveContainer>
               </div>
 
@@ -194,9 +285,11 @@ export default function FinancialChart() {
                   transition={{ delay: 0.4 }}
                   className="glass rounded-xl p-4"
                 >
-                  <p className="text-xs text-muted-foreground mb-1">Rata-rata Bulanan</p>
+                  <p className="text-xs text-muted-foreground mb-1">
+                    {isAllMonths ? 'Rata-rata Bulanan' : 'Pemasukan'}
+                  </p>
                   <p className="text-lg font-semibold text-[#4ade80]">
-                    {formatCurrency(totalPemasukan / 3)}
+                    {formatCurrency(isAllMonths ? totalPemasukan / monthCount : totalPemasukan)}
                   </p>
                 </motion.div>
                 <motion.div

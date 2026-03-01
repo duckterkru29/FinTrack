@@ -6,9 +6,14 @@ import {
   Mail,
   Heart
 } from 'lucide-react';
+import { useFinance } from '@/hooks/useFinance';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
+  const { data, selectedMonth, transactions } = useFinance();
+
+  const currentData = data[selectedMonth];
+  const categoriesCount = currentData ? currentData.expenses.length : 0;
 
   return (
     <footer className="py-12 px-4 sm:px-6 lg:px-8 border-t border-border">
@@ -23,7 +28,7 @@ export default function Footer() {
           {/* Logo and Tagline */}
           <div className="flex flex-col items-center md:items-start gap-2">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#4ade80] to-[#60a5fa] flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent shadow-lg shadow-primary/20 flex items-center justify-center">
                 <Wallet className="w-5 h-5 text-white" />
               </div>
               <span className="text-xl font-bold gradient-text">
@@ -38,15 +43,15 @@ export default function Footer() {
           {/* Quick Stats */}
           <div className="flex items-center gap-8">
             <div className="text-center">
-              <p className="text-2xl font-bold text-[#4ade80]">3</p>
+              <p className="text-2xl font-bold text-accent">{data.length}</p>
               <p className="text-xs text-muted-foreground">Bulan Data</p>
             </div>
             <div className="text-center">
-              <p className="text-2xl font-bold text-[#60a5fa]">52</p>
+              <p className="text-2xl font-bold text-primary">{transactions.length}</p>
               <p className="text-xs text-muted-foreground">Transaksi</p>
             </div>
             <div className="text-center">
-              <p className="text-2xl font-bold text-[#a78bfa]">4</p>
+              <p className="text-2xl font-bold text-[#a78bfa]">{categoriesCount}</p>
               <p className="text-xs text-muted-foreground">Kategori</p>
             </div>
           </div>

@@ -4,37 +4,206 @@ import {
   Layers,
   ChevronDown,
   ChevronUp,
-  Target,
-  CheckCircle2,
-  AlertCircle
+  Plus,
+  Trash2,
+  Edit2,
+  Save,
+  XIcon,
+  Calendar
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { monthlyData, formatCurrency } from '@/data/financeData';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { formatCurrency } from '@/data/financeData';
+import { useFinance } from '@/hooks/useFinance';
+import type { MonthlyData } from '@/types/finance';
 
-interface ExpenseBreakdownProps {
-  selectedMonth: number;
-}
+export default function ExpenseBreakdown() {
+  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
+  const { data, selectedMonth, setSelectedMonth, updateIncome, addSubcategory, updateSubcategory, deleteSubcategory, addMonth, deleteMonthData } = useFinance();
 
-export default function ExpenseBreakdown({ selectedMonth }: ExpenseBreakdownProps) {
-  const [expandedCategory, setExpandedCategory] = useState<string | null>('1');
+  const currentData = data[selectedMonth];
 
-  const currentData = monthlyData[selectedMonth];
+  const [editIncomeMode, setEditIncomeMode] = useState(false);
+  const [incomeForm, setIncomeForm] = useState(currentData.income);
+
+  const [addingSubTo, setAddingSubTo] = useState<string | null>(null);
+  const [newSubForm, setNewSubForm] = useState({ name: '', idealAmount: 0, realAmount: 0, notes: '' });
+
+  const [editingSub, setEditingSub] = useState<{ catId: string, subId: string } | null>(null);
+  const [editSubForm, setEditSubForm] = useState({ name: '', idealAmount: 0, realAmount: 0, notes: '' });
+
+  const [isAddingMonth, setIsAddingMonth] = useState(false);
+  const [newMonthName, setNewMonthName] = useState('');
+  const [newYearName, setNewYearName] = useState(new Date().getFullYear());
 
   const toggleCategory = (categoryId: string) => {
     setExpandedCategory(expandedCategory === categoryId ? null : categoryId);
   };
 
+  const handleAddMonth = () => {
+    if (newMonthName.trim() === '') return;
+    addMonth(newMonthName, newYearName);
+    setIsAddingMonth(false);
+    setNewMonthName('');
+  };
+
+  const handleSaveIncome = () => {
+    updateIncome(selectedMonth, 'gaji', Number(incomeForm.gaji));
+    updateIncome(selectedMonth, 'tukin', Number(incomeForm.tukin));
+    updateIncome(selectedMonth, 'makan', Number(incomeForm.makan));
+    updateIncome(selectedMonth, 'lainnya', Number(incomeForm.lainnya));
+    setEditIncomeMode(false);
+  };
+
+  const handleAddSubcategory = (categoryId: string) => {
+    if (newSubForm.name.trim() === '') return;
+    addSubcategory(selectedMonth, categoryId, newSubForm.name, Number(newSubForm.idealAmount), Number(newSubForm.realAmount), newSubForm.notes);
+    setAddingSubTo(null);
+    setNewSubForm({ name: '', idealAmount: 0, realAmount: 0, notes: '' });
+  };
+
+  const handleSaveSubcategory = (categoryId: string, subId: string) => {
+    updateSubcategory(selectedMonth, categoryId, subId, 'name', editSubForm.name);
+    updateSubcategory(selectedMonth, categoryId, subId, 'notes', editSubForm.notes);
+    updateSubcategory(selectedMonth, categoryId, subId, 'idealAmount', Number(editSubForm.idealAmount));
+    updateSubcategory(selectedMonth, categoryId, subId, 'realAmount', Number(editSubForm.realAmount));
+    setEditingSub(null);
+  };
+
   return (
     <section className="py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto space-y-8">
+
+        {/* Month Selector */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="flex flex-col md:flex-row items-center gap-4"
+        >
+          <div className="flex items-center gap-3 bg-card rounded-xl p-2 px-4 border border-border">
+            <Calendar className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+            <select
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(Number(e.target.value))}
+              className="bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-sm font-medium text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer min-w-[180px]"
+            >
+              {data.map((monthData, index) => (
+                <option key={`${monthData.month}-${monthData.year}-${index}`} value={index} className="text-foreground bg-background">
+                  {monthData.month} {monthData.year}
+                </option>
+              ))}
+            </select>
+
+            <button
+              onClick={() => setIsAddingMonth(true)}
+              className="px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-white/10 transition-all duration-300 flex items-center gap-1.5 border border-white/10"
+            >
+              <Plus className="w-4 h-4" /> Tambah Bulan
+            </button>
+
+            <button
+              onClick={() => {
+                if (window.confirm(`Anda yakin ingin menghapus / mereset semua data simulasi pada bulan ${currentData.month} ${currentData.year}?`)) {
+                  deleteMonthData(selectedMonth);
+                }
+              }}
+              className="px-3 py-2 rounded-lg text-sm font-medium text-[#f87171] hover:text-[#ef4444] hover:bg-[#f87171]/10 transition-all duration-300 flex items-center gap-1.5 border border-[#f87171]/20"
+            >
+              <Trash2 className="w-4 h-4" /> Reset
+            </button>
+          </div>
+
+          {isAddingMonth && (
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="flex items-center gap-2 bg-card rounded-xl p-2 px-3 border border-border"
+            >
+              <Input
+                placeholder="Nama Bulan"
+                value={newMonthName}
+                onChange={(e) => setNewMonthName(e.target.value)}
+                className="w-32 h-9 rounded-lg border-white/10 bg-white/5 text-white focus-visible:ring-2 focus-visible:ring-primary placeholder:text-gray-400 font-medium"
+              />
+              <Input
+                type="number"
+                placeholder="Tahun"
+                value={newYearName || ''}
+                onChange={(e) => setNewYearName(Number(e.target.value))}
+                className="w-24 h-9 rounded-lg border-white/10 bg-white/5 text-white focus-visible:ring-2 focus-visible:ring-primary placeholder:text-gray-400 font-medium"
+              />
+              <Button size="sm" className="rounded-lg h-9 px-4 font-semibold hover:bg-primary/90" onClick={handleAddMonth}>Simpan</Button>
+              <Button size="sm" variant="ghost" className="rounded-lg h-9 px-4 hover:bg-muted text-muted-foreground" onClick={() => setIsAddingMonth(false)}>Batal</Button>
+            </motion.div>
+          )}
+        </motion.div>
+
+        {/* Income Card */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.8 }}
         >
-          <Card className="bg-gradient-to-br from-[#2a2a2a] to-[#1a1a1a] border-border overflow-hidden">
+          <Card className="bg-card glass shadow-2xl overflow-hidden">
+            <CardHeader className="pb-2 flex flex-row items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-[#60a5fa]/20 rounded-lg">
+                  <Layers className="w-5 h-5 text-[#60a5fa]" />
+                </div>
+                <div>
+                  <CardTitle className="text-xl font-bold text-foreground">
+                    Pendapatan
+                  </CardTitle>
+                </div>
+              </div>
+              {!editIncomeMode ? (
+                <Button variant="ghost" size="sm" onClick={() => { setIncomeForm(currentData.income); setEditIncomeMode(true); }}>
+                  <Edit2 className="w-4 h-4 mr-2" /> Edit
+                </Button>
+              ) : (
+                <div className="flex gap-2">
+                  <Button variant="ghost" size="sm" onClick={() => setEditIncomeMode(false)}>
+                    Batal
+                  </Button>
+                  <Button variant="default" size="sm" onClick={handleSaveIncome}>
+                    <Save className="w-4 h-4 mr-2" /> Simpan
+                  </Button>
+                </div>
+              )}
+            </CardHeader>
+            <CardContent className="pt-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {(Object.keys(currentData.income).filter(k => k !== 'total') as Array<keyof MonthlyData['income']>).map(key => (
+                  <div key={key} className="glass p-4 rounded-xl">
+                    <p className="text-sm text-muted-foreground capitalize mb-2">{key}</p>
+                    {editIncomeMode ? (
+                      <Input
+                        type="number"
+                        value={incomeForm[key]}
+                        onChange={(e) => setIncomeForm({ ...incomeForm, [key]: Number(e.target.value) })}
+                        className="bg-background"
+                      />
+                    ) : (
+                      <p className="text-lg font-semibold text-[#60a5fa]">{formatCurrency(currentData.income[key])}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Expenses List */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8 }}
+        >
+          <Card className="bg-card glass shadow-2xl overflow-hidden">
             <CardHeader className="pb-2">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-[#4ade80]/20 rounded-lg">
@@ -42,17 +211,17 @@ export default function ExpenseBreakdown({ selectedMonth }: ExpenseBreakdownProp
                 </div>
                 <div>
                   <CardTitle className="text-2xl font-bold text-foreground">
-                    Detail Pengeluaran
+                    Pengeluaran
                   </CardTitle>
                   <p className="text-sm text-muted-foreground mt-1">
-                    Rincian pengeluaran {currentData.month} 2026
+                    Kustomisasi sub kategori pengeluaran
                   </p>
                 </div>
               </div>
             </CardHeader>
             <CardContent className="pt-6">
               <div className="space-y-4">
-                {currentData.expenses.map((category, categoryIndex) => {
+                {currentData.expenses.map((category) => {
                   const isExpanded = expandedCategory === category.id;
                   const categoryPercentage = category.idealAmount > 0
                     ? (category.realAmount / category.idealAmount * 100)
@@ -62,15 +231,11 @@ export default function ExpenseBreakdown({ selectedMonth }: ExpenseBreakdownProp
                   return (
                     <motion.div
                       key={category.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: categoryIndex * 0.1, duration: 0.5 }}
                       className="glass rounded-xl overflow-hidden"
                     >
                       {/* Category Header */}
                       <div
-                        className="p-4 cursor-pointer hover:bg-secondary/30 transition-colors"
+                        className="p-4 cursor-pointer hover:bg-white/5 transition-colors"
                         onClick={() => toggleCategory(category.id)}
                       >
                         <div className="flex items-center justify-between">
@@ -83,9 +248,6 @@ export default function ExpenseBreakdown({ selectedMonth }: ExpenseBreakdownProp
                               <h4 className="font-semibold text-foreground">
                                 {category.name}
                               </h4>
-                              <p className="text-xs text-muted-foreground">
-                                {category.percentage}% dari pendapatan
-                              </p>
                             </div>
                           </div>
                           <div className="flex items-center gap-4">
@@ -105,13 +267,12 @@ export default function ExpenseBreakdown({ selectedMonth }: ExpenseBreakdownProp
                           </div>
                         </div>
 
-                        {/* Progress Bar */}
                         <div className="mt-3">
                           <div className="relative h-2 bg-secondary rounded-full overflow-hidden">
                             <motion.div
                               initial={{ width: 0 }}
                               animate={{ width: `${Math.min(categoryPercentage, 100)}%` }}
-                              transition={{ duration: 1, delay: 0.3 }}
+                              transition={{ duration: 1 }}
                               className="absolute top-0 left-0 h-full rounded-full"
                               style={{ backgroundColor: isOverBudget ? '#f87171' : category.color }}
                             />
@@ -129,7 +290,7 @@ export default function ExpenseBreakdown({ selectedMonth }: ExpenseBreakdownProp
 
                       {/* Subcategories */}
                       <AnimatePresence>
-                        {isExpanded && category.subcategories && (
+                        {isExpanded && (
                           <motion.div
                             initial={{ height: 0, opacity: 0 }}
                             animate={{ height: 'auto', opacity: 1 }}
@@ -138,66 +299,120 @@ export default function ExpenseBreakdown({ selectedMonth }: ExpenseBreakdownProp
                             className="overflow-hidden border-t border-border"
                           >
                             <div className="p-4 space-y-3">
-                              <div className="flex items-center gap-2 mb-3">
-                                <Target className="w-4 h-4 text-muted-foreground" />
-                                <span className="text-sm text-muted-foreground">
-                                  Sub Kategori
-                                </span>
-                              </div>
-                              {category.subcategories.map((sub, subIndex) => {
-                                const subPercentage = sub.idealAmount > 0
-                                  ? (sub.realAmount / sub.idealAmount * 100)
-                                  : 0;
-                                const hasValue = sub.realAmount > 0 || sub.idealAmount > 0;
+                              {category.subcategories?.map((sub) => {
+                                const isEditing = editingSub?.subId === sub.id && editingSub?.catId === category.id;
 
                                 return (
-                                  <motion.div
-                                    key={sub.id}
-                                    initial={{ opacity: 0, x: -20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ delay: subIndex * 0.05 }}
-                                    className={`p-3 rounded-lg ${hasValue ? 'bg-secondary/50' : 'bg-secondary/20'}`}
-                                  >
-                                    <div className="flex items-center justify-between">
-                                      <div className="flex items-center gap-2">
-                                        {sub.realAmount > 0 ? (
-                                          <CheckCircle2 className="w-4 h-4 text-[#4ade80]" />
-                                        ) : sub.idealAmount > 0 ? (
-                                          <AlertCircle className="w-4 h-4 text-[#fbbf24]" />
-                                        ) : (
-                                          <div className="w-4 h-4 rounded-full border border-muted-foreground" />
-                                        )}
-                                        <span className={`text-sm ${hasValue ? 'text-foreground' : 'text-muted-foreground'}`}>
-                                          {sub.name}
-                                        </span>
-                                      </div>
-                                      <div className="text-right">
-                                        <p className={`text-sm font-medium ${sub.realAmount > sub.idealAmount ? 'text-[#f87171]' : 'text-foreground'}`}>
-                                          {formatCurrency(sub.realAmount)}
-                                        </p>
-                                        {sub.idealAmount > 0 && (
-                                          <p className="text-xs text-muted-foreground">
-                                            Ideal: {formatCurrency(sub.idealAmount)}
-                                          </p>
-                                        )}
-                                      </div>
-                                    </div>
-                                    {sub.idealAmount > 0 && (
-                                      <div className="mt-2">
-                                        <Progress
-                                          value={Math.min(subPercentage, 100)}
-                                          className="h-1"
+                                  <div key={sub.id} className="p-3 rounded-lg bg-white/5 flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+                                    {isEditing ? (
+                                      <div className="flex-1 w-full grid grid-cols-1 md:grid-cols-4 gap-2">
+                                        <Input
+                                          placeholder="Nama Item"
+                                          value={editSubForm.name}
+                                          onChange={(e) => setEditSubForm({ ...editSubForm, name: e.target.value })}
+                                          className="bg-white/10 border-white/10 text-white placeholder:text-gray-400"
                                         />
+                                        <div className="flex flex-col">
+                                          <span className="text-xs text-muted-foreground ml-1 mb-1">Keterangan</span>
+                                          <Input
+                                            placeholder="Opsional"
+                                            value={editSubForm.notes || ''}
+                                            onChange={(e) => setEditSubForm({ ...editSubForm, notes: e.target.value })}
+                                            className="bg-white/10 border-white/10 text-white placeholder:text-gray-400"
+                                          />
+                                        </div>
+                                        <div className="flex flex-col">
+                                          <span className="text-xs text-muted-foreground ml-1 mb-1">Real Amount</span>
+                                          <Input
+                                            type="number"
+                                            placeholder="Real Amount"
+                                            value={editSubForm.realAmount}
+                                            onChange={(e) => setEditSubForm({ ...editSubForm, realAmount: Number(e.target.value) })}
+                                            className="bg-white/10 border-white/10 text-white placeholder:text-gray-400"
+                                          />
+                                        </div>
+                                        <div className="flex gap-2 items-end justify-end">
+                                          <Button variant="ghost" size="icon" onClick={() => setEditingSub(null)}>
+                                            <XIcon className="w-4 h-4" />
+                                          </Button>
+                                          <Button size="icon" onClick={() => handleSaveSubcategory(category.id, sub.id)}>
+                                            <Save className="w-4 h-4" />
+                                          </Button>
+                                        </div>
                                       </div>
+                                    ) : (
+                                      <>
+                                        <div>
+                                          <p className="font-medium text-foreground">{sub.name}</p>
+                                          {sub.notes && <p className="text-xs text-muted-foreground">{sub.notes}</p>}
+                                          <div className="flex gap-4 text-xs mt-1 text-muted-foreground">
+                                            <span>Real: {formatCurrency(sub.realAmount)}</span>
+                                          </div>
+                                        </div>
+                                        <div className="flex gap-2">
+                                          <Button variant="ghost" size="icon" onClick={() => {
+                                            setEditingSub({ catId: category.id, subId: sub.id });
+                                            setEditSubForm({ name: sub.name, idealAmount: sub.idealAmount, realAmount: sub.realAmount, notes: sub.notes || '' });
+                                          }}>
+                                            <Edit2 className="w-4 h-4 text-muted-foreground hover:text-foreground" />
+                                          </Button>
+                                          <Button variant="ghost" size="icon" onClick={() => deleteSubcategory(selectedMonth, category.id, sub.id)}>
+                                            <Trash2 className="w-4 h-4 text-[#f87171] hover:text-[#ef4444]" />
+                                          </Button>
+                                        </div>
+                                      </>
                                     )}
-                                    {sub.notes && (
-                                      <p className="text-xs text-muted-foreground mt-2 italic">
-                                        {sub.notes}
-                                      </p>
-                                    )}
-                                  </motion.div>
+                                  </div>
                                 );
                               })}
+
+                              {/* Add Subcategory Form */}
+                              {addingSubTo === category.id ? (
+                                <div className="p-3 rounded-lg bg-white/5 border border-white/10 flex flex-col md:flex-row gap-4 items-end">
+                                  <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-2 w-full">
+                                    <div className="flex flex-col">
+                                      <span className="text-xs text-muted-foreground ml-1 mb-1">Nama</span>
+                                      <Input
+                                        placeholder="Nama Kategori"
+                                        value={newSubForm.name}
+                                        onChange={(e) => setNewSubForm({ ...newSubForm, name: e.target.value })}
+                                        className="bg-white/10 border-white/10 text-white placeholder:text-gray-400"
+                                      />
+                                    </div>
+                                    <div className="flex flex-col">
+                                      <span className="text-xs text-muted-foreground ml-1 mb-1">Keterangan</span>
+                                      <Input
+                                        placeholder="Opsional"
+                                        value={newSubForm.notes}
+                                        onChange={(e) => setNewSubForm({ ...newSubForm, notes: e.target.value })}
+                                        className="bg-white/10 border-white/10 text-white placeholder:text-gray-400"
+                                      />
+                                    </div>
+                                    <div className="flex flex-col">
+                                      <span className="text-xs text-muted-foreground ml-1 mb-1">Real</span>
+                                      <Input
+                                        type="number"
+                                        placeholder="Real Amount"
+                                        value={newSubForm.realAmount || ''}
+                                        onChange={(e) => setNewSubForm({ ...newSubForm, realAmount: Number(e.target.value) })}
+                                        className="bg-white/10 border-white/10 text-white placeholder:text-gray-400"
+                                      />
+                                    </div>
+                                  </div>
+                                  <div className="flex gap-2">
+                                    <Button variant="ghost" onClick={() => setAddingSubTo(null)}>Batal</Button>
+                                    <Button onClick={() => handleAddSubcategory(category.id)}>Simpan</Button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <Button
+                                  variant="outline"
+                                  className="w-full mt-2 border-dashed border-2 bg-transparent hover:bg-white/5 border-white/20 text-white"
+                                  onClick={() => setAddingSubTo(category.id)}
+                                >
+                                  <Plus className="w-4 h-4 mr-2" /> Tambah Sub Kategori
+                                </Button>
+                              )}
                             </div>
                           </motion.div>
                         )}
@@ -212,7 +427,6 @@ export default function ExpenseBreakdown({ selectedMonth }: ExpenseBreakdownProp
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: 0.5 }}
                 className="mt-6 pt-6 border-t border-border"
               >
                 <div className="glass rounded-xl p-6">
@@ -230,21 +444,15 @@ export default function ExpenseBreakdown({ selectedMonth }: ExpenseBreakdownProp
                       </p>
                     </div>
                     <div className="text-center">
-                      <p className="text-xs text-muted-foreground mb-1">Selisih</p>
+                      <p className="text-xs text-muted-foreground mb-1">Selisih Total</p>
                       <p className={`text-lg font-semibold ${currentData.totalDifference >= 0 ? 'text-[#4ade80]' : 'text-[#f87171]'}`}>
                         {formatCurrency(currentData.totalDifference)}
                       </p>
                     </div>
                     <div className="text-center">
-                      <p className="text-xs text-muted-foreground mb-1">Efisiensi</p>
-                      <p className={`text-lg font-semibold ${
-                        (currentData.totalDifference / currentData.totalIdeal * 100) >= 0
-                          ? 'text-[#4ade80]'
-                          : 'text-[#f87171]'
-                      }`}>
-                        {currentData.totalIdeal > 0
-                          ? `${(currentData.totalDifference / currentData.totalIdeal * 100).toFixed(1)}%`
-                          : '0%'}
+                      <p className="text-xs text-muted-foreground mb-1">Sisa Pendapatan</p>
+                      <p className={`text-lg font-semibold ${(currentData.income.total - currentData.totalReal) >= 0 ? 'text-[#4ade80]' : 'text-[#f87171]'}`}>
+                        {formatCurrency(currentData.income.total - currentData.totalReal)}
                       </p>
                     </div>
                   </div>

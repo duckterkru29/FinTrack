@@ -5,10 +5,8 @@ import {
   Menu,
   X,
   Home,
-  PieChart,
-  History,
-  PlusCircle,
-  Layers
+  List,
+  PlusCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -19,10 +17,8 @@ interface NavigationProps {
 
 const navItems = [
   { id: 'dashboard', label: 'Dashboard', icon: Home },
-  { id: 'chart', label: 'Grafik', icon: PieChart },
-  { id: 'budget', label: 'Anggaran', icon: Layers },
-  { id: 'transactions', label: 'Transaksi', icon: History },
-  { id: 'add', label: 'Tambah', icon: PlusCircle }
+  { id: 'breakdown', label: 'Budget Plan', icon: List },
+  { id: 'add-transaction', label: 'Tambah Transaksi', icon: PlusCircle }
 ];
 
 export default function Navigation({ activeSection, onNavigate }: NavigationProps) {
@@ -45,11 +41,10 @@ export default function Navigation({ activeSection, onNavigate }: NavigationProp
         initial={{ y: -100 }}
         animate={{ y: 0 }}
         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          isScrolled
-            ? 'bg-background/80 backdrop-blur-lg border-b border-border'
-            : 'bg-transparent'
-        }`}
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled
+          ? 'bg-background/80 backdrop-blur-lg border-b border-border'
+          : 'bg-transparent'
+          }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 lg:h-20">
@@ -60,7 +55,7 @@ export default function Navigation({ activeSection, onNavigate }: NavigationProp
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#4ade80] to-[#60a5fa] flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent shadow-lg shadow-primary/20 flex items-center justify-center">
                 <Wallet className="w-5 h-5 text-white" />
               </div>
               <span className="text-xl font-bold gradient-text hidden sm:block">
@@ -78,11 +73,10 @@ export default function Navigation({ activeSection, onNavigate }: NavigationProp
                   <motion.button
                     key={item.id}
                     onClick={() => onNavigate(item.id)}
-                    className={`relative px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
-                      isActive
-                        ? 'text-foreground'
-                        : 'text-muted-foreground hover:text-foreground'
-                    }`}
+                    className={`relative px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${isActive
+                      ? 'text-foreground'
+                      : 'text-muted-foreground hover:text-foreground'
+                      }`}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
@@ -142,11 +136,10 @@ export default function Navigation({ activeSection, onNavigate }: NavigationProp
                         onNavigate(item.id);
                         setIsMobileMenuOpen(false);
                       }}
-                      className={`p-4 rounded-xl text-left transition-all flex items-center gap-3 ${
-                        isActive
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-secondary text-foreground hover:bg-secondary/80'
-                      }`}
+                      className={`p-4 rounded-xl text-left transition-all flex items-center gap-3 ${isActive
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-secondary text-foreground hover:bg-secondary/80'
+                        }`}
                       whileTap={{ scale: 0.98 }}
                     >
                       <Icon className="w-5 h-5" />
@@ -167,8 +160,8 @@ export default function Navigation({ activeSection, onNavigate }: NavigationProp
         transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
         className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-background/90 backdrop-blur-lg border-t border-border"
       >
-        <div className="flex items-center justify-around p-2">
-          {navItems.slice(0, 5).map((item) => {
+        <div className="flex items-center justify-around p-2 w-full max-w-sm mx-auto">
+          {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeSection === item.id;
 
@@ -176,11 +169,10 @@ export default function Navigation({ activeSection, onNavigate }: NavigationProp
               <motion.button
                 key={item.id}
                 onClick={() => onNavigate(item.id)}
-                className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors ${
-                  isActive
-                    ? 'text-primary'
-                    : 'text-muted-foreground'
-                }`}
+                className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors ${isActive
+                  ? 'text-primary'
+                  : 'text-muted-foreground'
+                  }`}
                 whileTap={{ scale: 0.9 }}
               >
                 <div className={`p-2 rounded-lg ${isActive ? 'bg-primary/20' : ''}`}>
