@@ -80,10 +80,10 @@ export default function ExpenseBreakdown() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="flex flex-col gap-4 w-full"
+          className="flex flex-col gap-4 w-full sm:w-max"
         >
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 bg-card rounded-xl p-2 sm:px-4 border border-border">
-            <div className="flex items-center gap-2 flex-1">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 bg-card rounded-xl p-2 sm:px-4 border border-border w-full sm:w-auto">
+            <div className="flex items-center gap-2 sm:flex-none flex-1">
               <Calendar className="w-5 h-5 text-muted-foreground flex-shrink-0 ml-1" />
               <select
                 value={selectedMonth}
