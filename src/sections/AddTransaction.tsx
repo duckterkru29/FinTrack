@@ -180,72 +180,86 @@ export default function AddTransaction() {
                             </div>
                         </CardHeader>
 
-                        <CardContent className="pt-4 space-y-4">
-                            {/* Summary Cards */}
-                            <div className="grid grid-cols-3 gap-3">
-                                <div className="text-center bg-white/5 rounded-xl p-3 border border-white/5">
-                                    <p className="text-xs text-muted-foreground mb-1">Total Budget</p>
-                                    <p className="text-base font-bold text-white">
+                        <CardContent className="pt-2 sm:pt-4 space-y-4 sm:space-y-6">
+                            {/* Summary Cards - Responsive */}
+                            <div className="grid grid-cols-3 gap-2 sm:gap-4">
+                                <div className="flex flex-col items-center justify-center text-center bg-white/[0.03] rounded-xl p-2 sm:p-4 border border-white/5 shadow-inner">
+                                    <p className="text-[9px] sm:text-xs text-muted-foreground mb-0.5 sm:mb-1 uppercase tracking-wider whitespace-nowrap">Total Budget</p>
+                                    <p className="text-xs sm:text-lg font-bold text-white truncate w-full">
                                         {formatCurrency(budgetSummary.totalBudget)}
                                     </p>
                                 </div>
-                                <div className="text-center bg-white/5 rounded-xl p-3 border border-white/5">
-                                    <p className="text-xs text-muted-foreground mb-1">Total Terpakai</p>
-                                    <p className="text-base font-bold text-yellow-400">
+                                <div className="flex flex-col items-center justify-center text-center bg-white/[0.03] rounded-xl p-2 sm:p-4 border border-white/5 shadow-inner">
+                                    <p className="text-[9px] sm:text-xs text-muted-foreground mb-0.5 sm:mb-1 uppercase tracking-wider whitespace-nowrap">Terpakai</p>
+                                    <p className="text-xs sm:text-lg font-bold text-[#fbbf24] truncate w-full">
                                         {formatCurrency(budgetSummary.totalSpent)}
                                     </p>
                                 </div>
-                                <div className="text-center bg-white/5 rounded-xl p-3 border border-white/5">
-                                    <p className="text-xs text-muted-foreground mb-1">Total Sisa</p>
-                                    <p className={`text-base font-bold ${budgetSummary.totalRemaining < 0 ? 'text-red-400' : 'text-primary'}`}>
+                                <div className="flex flex-col items-center justify-center text-center bg-white/[0.03] rounded-xl p-2 sm:p-4 border border-white/5 shadow-inner">
+                                    <p className="text-[9px] sm:text-xs text-muted-foreground mb-0.5 sm:mb-1 uppercase tracking-wider whitespace-nowrap">Sisa</p>
+                                    <p className={`text-xs sm:text-lg font-bold truncate w-full ${budgetSummary.totalRemaining < 0 ? 'text-[#f87171]' : 'text-[#60a5fa]'}`}>
                                         {formatCurrency(budgetSummary.totalRemaining)}
                                     </p>
                                 </div>
                             </div>
 
-                            {/* Categories */}
+                            {/* Categories List */}
                             <div className="space-y-3">
-                                {budgetSummary.categories.map((cat) => {
+                                {budgetSummary.categories.map((cat, index) => {
                                     const catPercent = cat.budget > 0 ? Math.min((cat.spent / cat.budget) * 100, 100) : 0;
                                     const catOver = cat.remaining < 0;
                                     const isExpanded = expandedMonitor === cat.name;
 
                                     return (
-                                        <div key={cat.name} className="rounded-xl border border-white/10 overflow-hidden">
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: index * 0.05 }}
+                                            key={cat.name}
+                                            className="rounded-xl border border-white/[0.08] bg-white/[0.01] hover:bg-white/[0.03] transition-all duration-300 overflow-hidden"
+                                        >
                                             {/* Category Header */}
                                             <button
                                                 onClick={() => setExpandedMonitor(isExpanded ? null : cat.name)}
-                                                className="w-full p-3 flex items-center justify-between hover:bg-white/5 transition-colors"
+                                                className="w-full p-3 sm:p-4 flex items-center justify-between group"
                                             >
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: cat.color }} />
-                                                    <div className="text-left">
-                                                        <p className="text-sm font-semibold text-white">{cat.name}</p>
-                                                        <p className="text-xs text-muted-foreground">{cat.percentage}% alokasi</p>
+                                                <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
+                                                    <div
+                                                        className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full flex-shrink-0 transition-transform group-hover:scale-110"
+                                                        style={{ backgroundColor: cat.color, boxShadow: `0 0 8px ${cat.color}80` }}
+                                                    />
+                                                    <div className="text-left truncate">
+                                                        <p className="text-sm sm:text-base font-semibold text-white truncate">{cat.name}</p>
+                                                        <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">{cat.percentage}% alokasi</p>
                                                     </div>
                                                 </div>
-                                                <div className="flex items-center gap-3">
+                                                <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0 ml-2">
                                                     <div className="text-right">
-                                                        <p className={`text-sm font-bold ${catOver ? 'text-red-400' : 'text-primary'}`}>
+                                                        <p className={`text-sm sm:text-base font-bold ${catOver ? 'text-[#f87171]' : 'text-[#60a5fa]'}`}>
                                                             {formatCurrency(cat.remaining)}
                                                         </p>
-                                                        <p className="text-xs text-muted-foreground">sisa</p>
+                                                        <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 uppercase tracking-wider">sisa</p>
                                                     </div>
-                                                    {isExpanded
-                                                        ? <ChevronUp className="w-4 h-4 text-muted-foreground" />
-                                                        : <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                                                    }
+                                                    <div className="p-1.5 sm:p-2 bg-white/5 rounded-lg group-hover:bg-white/10 transition-colors">
+                                                        {isExpanded
+                                                            ? <ChevronUp className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
+                                                            : <ChevronDown className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
+                                                        }
+                                                    </div>
                                                 </div>
                                             </button>
 
                                             {/* Progress bar */}
-                                            <div className="px-3 pb-2">
-                                                <div className="relative h-1.5 bg-white/10 rounded-full overflow-hidden">
-                                                    <div
-                                                        className={`absolute top-0 left-0 h-full rounded-full transition-all duration-300 ${catOver ? 'bg-red-500' : ''}`}
+                                            <div className="px-3 sm:px-4 pb-3 sm:pb-4">
+                                                <div className="relative h-1.5 sm:h-2 bg-black/40 rounded-full overflow-hidden border border-white/5">
+                                                    <motion.div
+                                                        initial={{ width: 0 }}
+                                                        animate={{ width: `${catPercent}%` }}
+                                                        transition={{ duration: 1, ease: "easeOut" }}
+                                                        className={`absolute top-0 left-0 h-full rounded-full ${catOver ? 'bg-[#f87171]' : ''}`}
                                                         style={{
-                                                            width: `${catPercent}%`,
-                                                            backgroundColor: catOver ? undefined : cat.color
+                                                            backgroundColor: catOver ? undefined : cat.color,
+                                                            boxShadow: catOver ? undefined : `0 0 10px ${cat.color}80`
                                                         }}
                                                     />
                                                 </div>
@@ -260,27 +274,27 @@ export default function AddTransaction() {
                                                         exit={{ height: 0 }}
                                                         className="overflow-hidden"
                                                     >
-                                                        <div className="border-t border-white/5 bg-white/[0.02]">
+                                                        <div className="border-t border-white/5 bg-black/20 pt-1 pb-2">
                                                             {cat.subs.map((sub) => {
                                                                 const subOver = sub.remaining < 0;
                                                                 const subPercent = sub.budget > 0 ? Math.min((sub.spent / sub.budget) * 100, 100) : 0;
                                                                 return (
-                                                                    <div key={sub.name} className="px-4 py-2.5 flex items-center justify-between border-b border-white/5 last:border-b-0">
-                                                                        <div className="flex-1">
-                                                                            <div className="flex items-center justify-between mb-1">
-                                                                                <span className="text-xs text-white font-medium">{sub.name}</span>
-                                                                                <span className={`text-xs font-semibold ${subOver ? 'text-red-400' : 'text-primary'}`}>
+                                                                    <div key={sub.name} className="px-4 py-2 flex items-center justify-between border-b border-white-[0.03] last:border-b-0 hover:bg-white/[0.02] transition-colors">
+                                                                        <div className="flex-1 min-w-0 pr-3">
+                                                                            <div className="flex items-center justify-between mb-1.5">
+                                                                                <span className="text-[11px] sm:text-xs text-white/80 font-medium truncate">{sub.name}</span>
+                                                                                <span className={`text-[11px] sm:text-xs font-semibold whitespace-nowrap ml-2 ${subOver ? 'text-[#f87171]' : 'text-[#4ade80]'}`}>
                                                                                     {formatCurrency(sub.remaining)}
                                                                                 </span>
                                                                             </div>
                                                                             <div className="flex items-center gap-2">
                                                                                 <div className="flex-1 relative h-1 bg-white/10 rounded-full overflow-hidden">
                                                                                     <div
-                                                                                        className={`absolute top-0 left-0 h-full rounded-full ${subOver ? 'bg-red-500' : 'bg-primary/70'}`}
+                                                                                        className={`absolute top-0 left-0 h-full rounded-full transition-all duration-500 ${subOver ? 'bg-[#f87171]' : 'bg-[#a78bfa]'}`}
                                                                                         style={{ width: `${subPercent}%` }}
                                                                                     />
                                                                                 </div>
-                                                                                <span className="text-[10px] text-muted-foreground w-16 text-right">
+                                                                                <span className="text-[9px] sm:text-[10px] text-muted-foreground whitespace-nowrap min-w-[3.5rem] text-right">
                                                                                     {formatCurrency(sub.spent)} / {formatCurrency(sub.budget)}
                                                                                 </span>
                                                                             </div>
@@ -292,7 +306,7 @@ export default function AddTransaction() {
                                                     </motion.div>
                                                 )}
                                             </AnimatePresence>
-                                        </div>
+                                        </motion.div>
                                     );
                                 })}
                             </div>
