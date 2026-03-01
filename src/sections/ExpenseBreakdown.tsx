@@ -305,13 +305,16 @@ export default function ExpenseBreakdown() {
                                 return (
                                   <div key={sub.id} className="p-3 rounded-lg bg-white/5 flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
                                     {isEditing ? (
-                                      <div className="flex-1 w-full grid grid-cols-1 md:grid-cols-4 gap-2">
-                                        <Input
-                                          placeholder="Nama Item"
-                                          value={editSubForm.name}
-                                          onChange={(e) => setEditSubForm({ ...editSubForm, name: e.target.value })}
-                                          className="bg-white/10 border-white/10 text-white placeholder:text-gray-400"
-                                        />
+                                      <div className="flex-1 w-full grid grid-cols-1 md:grid-cols-4 gap-3">
+                                        <div className="flex flex-col">
+                                          <span className="text-xs text-muted-foreground ml-1 mb-1">Nama Sub Kategori</span>
+                                          <Input
+                                            placeholder="Nama Item"
+                                            value={editSubForm.name}
+                                            onChange={(e) => setEditSubForm({ ...editSubForm, name: e.target.value })}
+                                            className="bg-white/10 border-white/10 text-white placeholder:text-gray-400"
+                                          />
+                                        </div>
                                         <div className="flex flex-col">
                                           <span className="text-xs text-muted-foreground ml-1 mb-1">Keterangan</span>
                                           <Input
@@ -331,7 +334,7 @@ export default function ExpenseBreakdown() {
                                             className="bg-white/10 border-white/10 text-white placeholder:text-gray-400"
                                           />
                                         </div>
-                                        <div className="flex gap-2 items-end justify-end">
+                                        <div className="flex gap-2 items-end justify-end mt-4 md:mt-0">
                                           <Button variant="ghost" size="icon" onClick={() => setEditingSub(null)}>
                                             <XIcon className="w-4 h-4" />
                                           </Button>
@@ -369,9 +372,9 @@ export default function ExpenseBreakdown() {
                               {/* Add Subcategory Form */}
                               {addingSubTo === category.id ? (
                                 <div className="p-3 rounded-lg bg-white/5 border border-white/10 flex flex-col md:flex-row gap-4 items-end">
-                                  <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-2 w-full">
+                                  <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-3 w-full">
                                     <div className="flex flex-col">
-                                      <span className="text-xs text-muted-foreground ml-1 mb-1">Nama</span>
+                                      <span className="text-xs text-muted-foreground ml-1 mb-1">Nama Sub Kategori</span>
                                       <Input
                                         placeholder="Nama Kategori"
                                         value={newSubForm.name}
@@ -389,7 +392,7 @@ export default function ExpenseBreakdown() {
                                       />
                                     </div>
                                     <div className="flex flex-col">
-                                      <span className="text-xs text-muted-foreground ml-1 mb-1">Real</span>
+                                      <span className="text-xs text-muted-foreground ml-1 mb-1">Real Amount</span>
                                       <Input
                                         type="number"
                                         placeholder="Real Amount"
