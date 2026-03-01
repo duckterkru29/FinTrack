@@ -80,62 +80,68 @@ export default function ExpenseBreakdown() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="flex flex-col md:flex-row items-center gap-4"
+          className="flex flex-col gap-4 w-full"
         >
-          <div className="flex items-center gap-3 bg-card rounded-xl p-2 px-4 border border-border">
-            <Calendar className="w-5 h-5 text-muted-foreground flex-shrink-0" />
-            <select
-              value={selectedMonth}
-              onChange={(e) => setSelectedMonth(Number(e.target.value))}
-              className="bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-sm font-medium text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer min-w-[180px]"
-            >
-              {data.map((monthData, index) => (
-                <option key={`${monthData.month}-${monthData.year}-${index}`} value={index} className="text-foreground bg-background">
-                  {monthData.month} {monthData.year}
-                </option>
-              ))}
-            </select>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 bg-card rounded-xl p-2 sm:px-4 border border-border">
+            <div className="flex items-center gap-2 flex-1">
+              <Calendar className="w-5 h-5 text-muted-foreground flex-shrink-0 ml-1" />
+              <select
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(Number(e.target.value))}
+                className="flex-1 sm:flex-none w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 sm:px-4 text-sm font-medium text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer min-w-[150px] sm:min-w-[180px]"
+              >
+                {data.map((monthData, index) => (
+                  <option key={`${monthData.month}-${monthData.year}-${index}`} value={index} className="text-foreground bg-background">
+                    {monthData.month} {monthData.year}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-            <button
-              onClick={() => setIsAddingMonth(true)}
-              className="px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-white/10 transition-all duration-300 flex items-center gap-1.5 border border-white/10"
-            >
-              <Plus className="w-4 h-4" /> Tambah Bulan
-            </button>
+            <div className="flex items-center gap-2 sm:flex-shrink-0">
+              <button
+                onClick={() => setIsAddingMonth(true)}
+                className="flex-1 sm:flex-none justify-center px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-white/10 transition-all duration-300 flex items-center gap-1.5 border border-white/10"
+              >
+                <Plus className="w-4 h-4" /> <span className="whitespace-nowrap">Tambah</span>
+              </button>
 
-            <button
-              onClick={() => {
-                if (window.confirm(`Anda yakin ingin menghapus / mereset semua data simulasi pada bulan ${currentData.month} ${currentData.year}?`)) {
-                  deleteMonthData(selectedMonth);
-                }
-              }}
-              className="px-3 py-2 rounded-lg text-sm font-medium text-[#f87171] hover:text-[#ef4444] hover:bg-[#f87171]/10 transition-all duration-300 flex items-center gap-1.5 border border-[#f87171]/20"
-            >
-              <Trash2 className="w-4 h-4" /> Reset
-            </button>
+              <button
+                onClick={() => {
+                  if (window.confirm(`Anda yakin ingin menghapus / mereset semua data simulasi pada bulan ${currentData.month} ${currentData.year}?`)) {
+                    deleteMonthData(selectedMonth);
+                  }
+                }}
+                className="flex-1 sm:flex-none justify-center px-3 py-2 rounded-lg text-sm font-medium text-[#f87171] hover:text-[#ef4444] hover:bg-[#f87171]/10 transition-all duration-300 flex items-center gap-1.5 border border-[#f87171]/20"
+              >
+                <Trash2 className="w-4 h-4" /> <span className="whitespace-nowrap">Reset</span>
+              </button>
+            </div>
           </div>
 
           {isAddingMonth && (
             <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="flex items-center gap-2 bg-card rounded-xl p-2 px-3 border border-border"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 bg-card rounded-xl p-3 border border-border w-full sm:w-max"
             >
               <Input
                 placeholder="Nama Bulan"
                 value={newMonthName}
                 onChange={(e) => setNewMonthName(e.target.value)}
-                className="w-32 h-9 rounded-lg border-white/10 bg-white/5 text-white focus-visible:ring-2 focus-visible:ring-primary placeholder:text-gray-400 font-medium"
+                className="w-full sm:w-32 h-9 rounded-lg border-white/10 bg-white/5 text-white focus-visible:ring-2 focus-visible:ring-primary placeholder:text-gray-400 font-medium"
               />
               <Input
                 type="number"
                 placeholder="Tahun"
                 value={newYearName || ''}
                 onChange={(e) => setNewYearName(Number(e.target.value))}
-                className="w-24 h-9 rounded-lg border-white/10 bg-white/5 text-white focus-visible:ring-2 focus-visible:ring-primary placeholder:text-gray-400 font-medium"
+                className="w-full sm:w-24 h-9 rounded-lg border-white/10 bg-white/5 text-white focus-visible:ring-2 focus-visible:ring-primary placeholder:text-gray-400 font-medium"
               />
-              <Button size="sm" className="rounded-lg h-9 px-4 font-semibold hover:bg-primary/90" onClick={handleAddMonth}>Simpan</Button>
-              <Button size="sm" variant="ghost" className="rounded-lg h-9 px-4 hover:bg-muted text-muted-foreground" onClick={() => setIsAddingMonth(false)}>Batal</Button>
+              <div className="flex items-center gap-2 mt-2 sm:mt-0">
+                <Button size="sm" className="flex-1 sm:flex-none rounded-lg h-9 px-4 font-semibold hover:bg-primary/90" onClick={handleAddMonth}>Simpan</Button>
+                <Button size="sm" variant="ghost" className="flex-1 sm:flex-none rounded-lg h-9 px-4 hover:bg-muted text-muted-foreground bg-white/5" onClick={() => setIsAddingMonth(false)}>Batal</Button>
+              </div>
             </motion.div>
           )}
         </motion.div>
