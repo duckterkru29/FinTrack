@@ -80,15 +80,15 @@ export default function ExpenseBreakdown() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="flex flex-col gap-4 w-full sm:w-max"
+          className="flex flex-col gap-4 w-full items-start"
         >
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 bg-card rounded-xl p-2 sm:px-4 border border-border w-full sm:w-auto">
-            <div className="flex items-center gap-2 sm:flex-none flex-1">
-              <Calendar className="w-5 h-5 text-muted-foreground flex-shrink-0 ml-1" />
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4 bg-card rounded-xl p-2 sm:px-4 sm:py-3 border border-border w-full sm:w-auto">
+            <div className="flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-muted-foreground flex-shrink-0 sm:ml-1" />
               <select
                 value={selectedMonth}
                 onChange={(e) => setSelectedMonth(Number(e.target.value))}
-                className="flex-1 sm:flex-none w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 sm:px-4 text-sm font-medium text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer min-w-[150px] sm:min-w-[180px]"
+                className="w-full sm:w-[200px] bg-white/5 border border-white/10 rounded-lg px-3 py-2 sm:px-4 text-sm font-medium text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer"
               >
                 {data.map((monthData, index) => (
                   <option key={`${monthData.month}-${monthData.year}-${index}`} value={index} className="text-foreground bg-background">
@@ -98,12 +98,12 @@ export default function ExpenseBreakdown() {
               </select>
             </div>
 
-            <div className="flex items-center gap-2 sm:flex-shrink-0">
+            <div className="flex items-center gap-2 w-full sm:w-auto">
               <button
                 onClick={() => setIsAddingMonth(true)}
-                className="flex-1 sm:flex-none justify-center px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-white/10 transition-all duration-300 flex items-center gap-1.5 border border-white/10"
+                className="flex-1 sm:flex-none justify-center px-4 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-white/10 transition-all duration-300 flex items-center gap-1.5 border border-white/10"
               >
-                <Plus className="w-4 h-4" /> <span className="whitespace-nowrap">Tambah</span>
+                <Plus className="w-4 h-4" /> <span>Tambah</span>
               </button>
 
               <button
@@ -112,9 +112,9 @@ export default function ExpenseBreakdown() {
                     deleteMonthData(selectedMonth);
                   }
                 }}
-                className="flex-1 sm:flex-none justify-center px-3 py-2 rounded-lg text-sm font-medium text-[#f87171] hover:text-[#ef4444] hover:bg-[#f87171]/10 transition-all duration-300 flex items-center gap-1.5 border border-[#f87171]/20"
+                className="flex-1 sm:flex-none justify-center px-4 py-2 rounded-lg text-sm font-medium text-[#f87171] hover:text-[#ef4444] hover:bg-[#f87171]/10 transition-all duration-300 flex items-center gap-1.5 border border-[#f87171]/20"
               >
-                <Trash2 className="w-4 h-4" /> <span className="whitespace-nowrap">Reset</span>
+                <Trash2 className="w-4 h-4" /> <span>Reset</span>
               </button>
             </div>
           </div>
